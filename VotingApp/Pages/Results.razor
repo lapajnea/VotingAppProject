@@ -1,0 +1,47 @@
+﻿@page "/Administrator/Results"
+@using VotingApp.DTO
+@using VotingApp.Models
+@using VotingApp.Repositories
+@inject IVotingRepository Repo
+@inject NavigationManager Man
+
+<h3> Oglejte si rezultate vprašalnikov</h3>
+
+@if(allEvents != null)
+{
+    @foreach (var singleEvent in allEvents)
+    {
+        <tabele>
+            <tr>
+            <td>@singleEvent.VotingEventId</td>
+            <td>@singleEvent.Title</td>
+            <td>@singleEvent.DateStart</td>
+            <td>@singleEvent.DateEnd</td>
+            <td> <button @onclick="@(e => ChooseEvent(singleEvent.VotingEventId))"> Izberi </button></td>
+            </tr>
+            <br />
+        </tabele>
+
+    }
+}
+else{
+    <p> Ni rezultatov</p>
+}
+
+
+
+@code {
+    List<VotingEvent> allEvents = new();
+  
+
+    protected async override void OnInitialized()
+    {
+        allEvents = await Repo.FetchAllVotingEvents();
+      
+    }
+
+    public void ChooseEvent(int eventId)
+    {
+        Man.NavigateTo($"/Results/ResultsOf/{eventId}");
+    }
+}

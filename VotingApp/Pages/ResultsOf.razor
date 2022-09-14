@@ -1,0 +1,102 @@
+﻿@page "/Results/ResultsOf/{eventId:int}"
+@using VotingApp.DTO
+@using VotingApp.Models
+@using VotingApp.Repositories
+@inject IVotingRepository Repo
+
+
+<h3>ResultsOf @eventTitle </h3>
+
+<p> sodelovalo je @allParticipants ljudi. Od tega @menParticipants moških in @womenParticipants žensk</p>
+
+@if(allQuestions != null)
+{
+    foreach(var question in allQuestions)
+    {
+        <label> @question.QuestionText</label>
+        <br />
+        var list = AllAnswers.Where(x => x.VotingQuestionId == question.VotingQuestionId).ToList();
+
+        <table>  
+          @if(list!=null)
+            {  <tr>
+                    <th>Odgovor</th>
+                    <th>moški</th>
+                    <th>ženske</th>
+                    <th>skupaj</th>
+                </tr>
+                
+                    @for(int i = 0; i< list.Count(); i++)
+                    {
+                    var numberOfMen = @Repo.FetchNumberOfChoosenAnswerBySex(eventId, "moski", list.ElementAt(i).VotingAnswerId).Result;
+                    var numberOfWomen = @Repo.FetchNumberOfChoosenAnswerBySex(eventId, "zenska", list.ElementAt(i).VotingAnswerId).Result;
+                    var numberOfAll = numberOfMen + numberOfWomen;
+                    <tr>
+                          <td> @list.ElementAt(i).VotingAnswerText</td>
+                          <td> @numberOfMen</td>
+                          <td> @numberOfWomen</td>
+                         <td> @numberOfAll </td>
+                         
+                         </tr>
+                    }
+                    <br /> 
+            }
+        </table>
+    }
+}
+
+<button type="button" @onclick="ShowResults"> Objavi rezultate!</button>
+<button type="button" @onclick="HideResults"> Skri rezultate!</button>
+<p> @Message </p>
+
+@code {
+    [Parameter]
+    public int eventId { get; set; }
+
+    List<VotingResult> eventResults = new();
+    int womenParticipants;
+    int menParticipants;
+    int allParticipants;
+    int otherParticipants;
+    List<VotingUser> allUsers = new();
+    List<VotingUser> heh = new();
+
+    List<VotingQuestion> allQuestions = new();
+    List<VotingAnswer> AllAnswers = new();
+    List<VotingAnswer> allAnswersOfEvent = new();
+
+    int numberOfMan, numberOfWoman;
+    string Message;
+    string eventTitle;
+
+    protected async override void OnInitialized()
+    {
+        eventResults = await Repo.FetchAllResults(eventId);
+        allParticipants = eventResults.GroupBy(x => x.VotingUserId).Count(); // število sodelujoči
+
+        womenParticipants = await Repo.FetchNumberOfParticipants(eventId, "zenska");
+        menParticipants = await Repo.FetchNumberOfParticipants(eventId, "moski");
+
+        allQuestions = await Repo.FetchAllQuestions(eventId);
+        AllAnswers = await Repo.AllAnswers();
+        eventTitle = await Repo.GetEventTitle(eventId);
+    }
+
+
+
+    public async void ShowResults()
+    {
+        await Repo.PublishEventResults(eventId);
+        Message = "Rezultati so objavljeni!";
+    }
+
+    public async void HideResults()
+    {
+        await Repo.HideEventResults(eventId);
+        Message = "Rezultati so skriti!";
+    }
+
+
+
+   
+}

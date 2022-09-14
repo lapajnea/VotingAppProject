@@ -1,0 +1,120 @@
+﻿@page "/event/{eventId:int}/{UserId:int}"
+@using VotingApp.DTO
+@using VotingApp.Repositories
+@using VotingApp.Models
+@inject IVotingRepository Repo
+@inject NavigationManager Man
+
+<h1> Vprašalnik: @eventTitle</h1>
+
+@if(VotingQuestions != null)
+{
+    foreach(var singleQuestion in VotingQuestions)
+    {
+        <label value="@singleQuestion"> @singleQuestion.QuestionText</label>
+        <br />
+        var list = AllAnswers.Where(x => x.VotingQuestionId == singleQuestion.VotingQuestionId).ToList();
+        if(list != null)
+        {
+            <select @onchange="AddToListSelectedAnswers">
+                <option> Izberite odgovor</option>
+            @for(int i= 0; i < list.Count(); i++)
+            {       
+                   <option value="@list.ElementAt(i).VotingAnswerText _@singleQuestion.VotingQuestionId _@list.ElementAt(i).VotingAnswerId"> @list.ElementAt(i).VotingAnswerText </option>
+            }
+
+            </select>     
+            <br />
+        }
+        
+    }
+    <button type="button" @onclick="AddToBase"> Oddaj!</button>
+
+}
+
+
+@code {
+
+    //@onclick="@(() => GetAnswerData(singleAnswer))"
+    [Parameter]
+    public int eventId { get; set; }
+    [Parameter]
+    public int UserId { get; set; }
+
+    string eventTitle;
+
+    List<VotingQuestion> VotingQuestions;
+    List<VotingAnswer> AllAnswers;
+    List<VotingAnswer> Answers;
+    //List<string> SelectedAnswers = new List<string>();
+    List<string> AllQuestions = new List<string>();
+    string answer;
+
+
+    VotingResult result = new VotingResult();
+    List<VotingAnswer> SelectedAnswers = new();
+
+    protected override async void OnInitialized()
+    {
+        Answers = new();
+        VotingQuestions = await Repo.FetchAllQuestions(eventId);
+        AllAnswers = await Repo.AllAnswers() ;
+        eventTitle = await Repo.GetEventTitle(eventId);
+    }
+    public async void AddToBase()
+    {
+        foreach(var record in SelectedAnswers)
+        {
+            result.VotingUserId = UserId;
+            result.VotingEventId = eventId;
+            result.VotingAnswerId = record.VotingAnswerId;
+            result.VotingQuestionId = record.VotingQuestionId;
+            await Repo.InsertVotingResults(result);
+
+            Man.NavigateTo("/");
+
+        }
+    }
+    public void AddToListSelectedAnswers(ChangeEventArgs e)
+    {
+
+        answer = (string)e.Value;
+        string[] subs = answer.Split('_');
+        var text = subs[0];
+        var textt = text.TrimEnd();
+        var questId = subs[1];
+        var answId = subs[2];
+        var questionId = int.Parse(questId);
+        var answerId = int.Parse(answId);
+        result.VotingQuestionId = questionId;
+        result.VotingAnswerId = answerId;
+
+        foreach(var record in SelectedAnswers)
+        {
+            if(record.VotingQuestionId == questionId)
+            {
+                record.VotingAnswerText = textt;
+            }
+        }
+
+        if(!SelectedAnswers.Any(x => x.VotingQuestionId == questionId))
+        {
+            var answer = new VotingAnswer();
+            answer.VotingQuestionId = questionId;
+            answer.VotingAnswerText = textt;
+            answer.VotingAnswerId = answerId;
+
+
+            SelectedAnswers.Add(answer);
+        }
+    } 
+
+    public void QuestionText(ChangeEventArgs e)
+    {
+        AllQuestions.Add((string)e.Value);  
+    }
+
+    
+
+  
+}

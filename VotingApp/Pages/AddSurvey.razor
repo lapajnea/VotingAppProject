@@ -1,0 +1,43 @@
+﻿@page "/Administrator/AddSurvey"
+@using VotingApp.DTO
+@using VotingApp.Models
+@using VotingApp.Repositories
+@inject IVotingRepository Repo
+@inject NavigationManager Man
+
+<h3> Dodaj vprašalnik! </h3>
+<hr/>
+<EditForm Model = "@Event" OnSubmit="AddEvent">
+     <label> Naslov:</label>
+     <InputText @bind-Value="Event.Title"></InputText>
+     <br />
+     <label> Začetek: </label>
+     <InputDate @bind-Value="Event.DateStart"></InputDate>
+     <br />
+    <label> Konec: </label>
+    <InputDate @bind-Value="Event.DateEnd"></InputDate>
+    <br />
+    <input type="submit"/>
+    <p>@Message</p>
+    
+
+</EditForm>
+@code {
+
+    EventClass Event = new EventClass();
+    string Message;
+
+    protected async void AddEvent()
+    {
+        if(Event.Title == null)
+        {
+            Message = "Vnesite naslov!";
+        }
+        else
+        {
+            await Repo.AddNewEvent(Event);
+            Man.NavigateTo($"/Administrator/AddSurvey/MakeSurvey/{Event.Title}");
+        }
+        
+    }
+}

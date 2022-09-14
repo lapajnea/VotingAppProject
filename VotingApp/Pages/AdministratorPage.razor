@@ -1,0 +1,37 @@
+﻿@page "/Administrator"
+@using VotingApp.Repositories
+@using VotingApp.Models
+@inject IVotingRepository Repo
+@inject NavigationManager Man
+
+<h3>Stran za administratorje </h3>
+
+<label> Izberite kaj želite početi</label>
+<select class="form-control" @onchange="OnSelect">
+    @foreach(var template in templates){
+        <option value="@template">@template</option>
+    }
+</select>
+<a href="/Administrator/@selectedString"> Pojdi</a>
+
+
+@code {
+    List<string> templates = new List<string>() { "", "Dodaj vprašalnik", "Rezultati" };
+    string selectedString;
+
+    void OnSelect(ChangeEventArgs e)
+    {
+
+
+        if((string)e.Value.ToString() == "Dodaj vprašalnik")
+        {
+           selectedString = "AddSurvey";
+            
+        }
+        if((string)e.Value.ToString() == "Rezultati")
+        {
+            selectedString = "Results";
+            
+        }
+    }
+}

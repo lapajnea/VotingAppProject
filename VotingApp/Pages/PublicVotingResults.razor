@@ -1,0 +1,46 @@
+﻿@page "/PublicResults"
+@using VotingApp.Repositories
+@using VotingApp.Models
+@inject IVotingRepository Repo
+@inject NavigationManager Man
+
+<h3>Javno objavljeni rezultati vprašalnikov</h3>
+
+@if(allEvents != null)
+{
+    @foreach(var singleEvent in allEvents)
+    {
+        if(singleEvent.PublishedVoting == 1)
+        {
+            <table>
+                <tr>
+                <td>@singleEvent.VotingEventId</td>
+                <td>@singleEvent.Title</td>
+                <td>@singleEvent.DateStart</td>
+                <td>@singleEvent.DateEnd</td>
+                <td> <button @onclick="@(e => ChooseEvent(singleEvent.VotingEventId))"> Izberi </button></td>
+                </tr>
+                <br />
+            </table>
+        }
+       
+    }
+}
+else{
+    <p> Rezultati še niso objavljeni.</p>
+}
+
+
+@code {
+    List<VotingEvent> allEvents = new();
+
+    protected async override void OnInitialized()
+    {
+        allEvents = await Repo.FetchAllVotingEvents();
+    }
+
+    public void ChooseEvent(int eventId)
+    {
+        Man.NavigateTo($"/PublicResultsOf/{eventId}");
+    }
+}

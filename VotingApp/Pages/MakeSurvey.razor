@@ -1,0 +1,136 @@
+﻿@page "/Administrator/AddSurvey/MakeSurvey/{Title}"
+@using VotingApp.DTO
+@using VotingApp.Models
+@using VotingApp.Repositories
+@inject IVotingRepository Repo
+@inject NavigationManager Man
+
+
+
+<h3>Ustvarite vprašalnik! </h3>
+
+
+
+<EditForm Model="@newEventData" OnSubmit="AddQuestionAndAnswers">
+<label> Vpašanje:</label>
+<InputText @bind-Value="newEventData.QuestionText"></InputText>
+<br />
+<label>Odgovor 1: </label>
+<InputText @bind-Value="newEventData.Answer1"></InputText>
+<br />
+<label>Odgovor 2: </label>
+<InputText @bind-Value="newEventData.Answer2"></InputText>
+<br />
+<label>Odgovor 3: </label>
+<InputText @bind-Value="newEventData.Answer3"></InputText>
+<br />
+<label>Odgovor 4: </label>
+<InputText @bind-Value="newEventData.Answer4"></InputText>
+<br />
+<label>Odgovor 5: </label>
+<InputText @bind-Value="newEventData.Answer5"></InputText>
+<br />
+<label>Odgovor 6: </label>
+<InputText @bind-Value="newEventData.Answer6"></InputText>
+<br />
+
+<input type="submit" value="Dodaj vprašanje" />
+</EditForm>
+@*<button type="button" @onclick="AddNewQuestion"> Dodaj novo vprašanje!</button>*@
+<button type="button" @onclick="GoToFirstPage"> Oddaj vprašalnik</button>
+<p> @Message </p>
+
+@code {
+    [Parameter]
+    public string title{ get; set; }
+    int eventId;
+    EventDataClass newEventData = new EventDataClass();
+    string Message;
+
+    protected async void AddQuestionAndAnswers()
+    {
+        if (this.newEventData.Answer1 == null &&
+        this.newEventData.Answer2 == null &&
+        this.newEventData.Answer3 == null &&
+        this.newEventData.Answer4 == null &&
+        this.newEventData.Answer5 == null &&
+        this.newEventData.Answer6 == null &&
+        this.newEventData.QuestionText == null)
+        {
+            Message = "Izpolnite polja!";
+        }
+        else
+        {
+            if (newEventData.Answer1 != null)
+            {
+                newEventData.ListAnswers.Add(newEventData.Answer1);
+            }
+            if (newEventData.Answer2 != null)
+            {
+                newEventData.ListAnswers.Add(newEventData.Answer2);
+            }
+            if (newEventData.Answer3 != null)
+            {
+                newEventData.ListAnswers.Add(newEventData.Answer3);
+            }
+            if (newEventData.Answer4 != null)
+            {
+                newEventData.ListAnswers.Add(newEventData.Answer4);
+            }
+            if (newEventData.Answer5 != null)
+            {
+                newEventData.ListAnswers.Add(newEventData.Answer5);
+            }
+            if (newEventData.Answer6 != null)
+            {
+                newEventData.ListAnswers.Add(newEventData.Answer6);
+            }
+            eventId = await Repo.GetEventId();
+
+            await Repo.AddQuestion(eventId, newEventData.QuestionText);
+            int questionId = await Repo.GetLastQuestionId() + 1;
+            foreach (var answer in newEventData.ListAnswers)
+            {
+                VotingAnswer newAnswer = new();
+                newAnswer.VotingAnswerText = answer;
+                newAnswer.VotingEventId = eventId;
+                newAnswer.VotingQuestionId = questionId;
+
+                await Repo.AddSingleAnswer(newAnswer);
+
+            }
+            Message = "Uspešno ste dodali vprašanje!"; 
+            newEventData = new EventDataClass();
+           
+            Message = "";
+
+            
+
+        }
+       
+    }
+
+    public void AddNewQuestion()
+    {
+        Message = "";
+        this.newEventData.Answer1 = null;
+        this.newEventData.Answer2 = null;
+        this.newEventData.Answer3 = null;
+        this.newEventData.Answer4 = null;
+        this.newEventData.Answer5 = null;
+        this.newEventData.Answer6 = null;
+        this.newEventData.QuestionText = null;
+    }
+
+    public void GoToFirstPage()
+    {
+        Man.NavigateTo("/");
+    }
+
+        
+    
+
+
+
+
+}
